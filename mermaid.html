@@ -1,0 +1,83 @@
+<!--
+  * @Author: yourui
+  * @Date: 2023-03-31
+  * Copyright (c) 2023 by yourui. All rights reserved.
+ -->
+ <!DOCTYPE html>
+ <html lang="en">
+   <head>
+     <style>
+       .download-button {
+         display: none;
+         padding: 3px 8px;
+         font-size: 12px;
+         font-weight: bold;
+         text-decoration: none;
+         border-radius: 1em;
+         color: white;
+         border: none;
+         outline: none;
+         background: #3FAA90
+       }
+     </style>
+     <script src="https://cdn.jsdelivr.net/npm/svg2img@1.0.0-beta.2/index.js"></script>
+   </head>
+   <body>
+     <div>
+       Here is a mermaid diagram:
+       <pre class="mermaid" id="mermaidDiagram">${MERMAID_CODE}</pre>
+     </div>
+     <button id="downloadSvg" class="download-button">Download SVG</button>
+     <button id="downloadPng" class="download-button">Download PNG</button>
+     <script type="module">
+       import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.mjs';
+ 
+       mermaid.initialize({
+         startOnLoad: true,
+         securityLevel: 'loose'
+       });
+       const buttons = document.querySelectorAll('.download-button')
+       await mermaid.run(
+         buttons.forEach(button => button.style.display = 'inline-block')
+       );
+       function downloadSvg() {
+         const mermaidSvg = document.querySelector('svg');
+         const serializer = new XMLSerializer();
+         const svgBlob = new Blob([serializer.serializeToString(mermaidSvg)], { type: "image/svg+xml;charset=utf-8" });
+         const svgUrl = URL.createObjectURL(svgBlob);
+         const downloadLink = document.createElement("a");
+         downloadLink.href = svgUrl;
+         downloadLink.download = "mermaid-diagram.svg";
+         document.body.appendChild(downloadLink);
+         downloadLink.click();
+         document.body.removeChild(downloadLink);
+       }
+ 
+       async function downloadPng() {
+         const mermaidSvg = document.querySelector('svg');
+         const svgString = new XMLSerializer().serializeToString(mermaidSvg);
+ 
+         svg2img(svgString, { format: 'png' }, (error, pngBlob) => {
+           if (error) {
+             console.error('Error converting SVG to PNG:', error);
+             return;
+           }
+ 
+           const pngUrl = URL.createObjectURL(pngBlob);
+           const downloadLink = document.createElement("a");
+           downloadLink.href = pngUrl;
+           downloadLink.download = "mermaid-diagram.png";
+           document.body.appendChild(downloadLink);
+           downloadLink.click();
+           document.body.removeChild(downloadLink);
+         });
+       }
+ 
+ 
+ 
+       document.getElementById('downloadSvg').addEventListener('click', downloadSvg);
+       document.getElementById('downloadPng').addEventListener('click', downloadPng);
+     </script>
+   </body>
+ </html>
+ 

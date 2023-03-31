@@ -1,0 +1,19 @@
+
+[
+  {
+    "type": "Flowcharts",
+    "prompt": "flowchart TD\nA[Start] --> B{Is it?}\nB -- Yes --> C[OK]\nC --> D[Rethink]\nD --> B\nB -- No ----> E[End]"
+  },
+  {
+    "type":"Class diagrams",
+    "prompt":"classDiagram\nnote \"From Duck till Zebra\"\nAnimal <|-- Duck\nnote for Duck \"can fly\ncan swim\ncan dive\ncan help in debugging\"\nAnimal <|-- Fish\nAnimal <|-- Zebra\nAnimal : +int age\nAnimal : +String gender\nAnimal: +isMammal()\nAnimal: +mate()\nclass Duck{+String beakColor\n+swim()\n+quack()}\nclass Fish{-int sizeInFeet\n-canEat()}\nclass Zebra{+bool is_wild\n+run()}"
+  },
+  {
+    "type": "Sequence diagrams",
+    "prompt": "sequenceDiagram\nAlice->>John: Hello John, how are you?\nJohn-->>Alice: Great!\nAlice-)John: See you later!"
+  },
+  {
+    "type": "Entity Relationship Diagrams",
+    "prompt": "erDiagram\nCUSTOMER||--o{ORDER:places\nORDER||--|{LINE-ITEM:contains\nCUSTOMER}|..|{DELIVERY-ADDRESS:uses\n"
+  }
+]
