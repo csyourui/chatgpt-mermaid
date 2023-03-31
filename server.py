@@ -9,7 +9,7 @@ import logging
 import os
 import re
 from urllib.parse import quote
-
+from template.diagrams import *
 from utils import *
 
 openai.api_type = "azure"
@@ -17,7 +17,6 @@ openai.api_base = os.getenv("OPENAI_API_BASE")
 openai.api_version = "2023-03-15-preview"
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-prompt_map = read_json_map("mermaid_fomat_prompt.json")
 html_content = read_html_file("mermaid.html")
 
 # 自定义日志格式，包括时间戳
@@ -35,19 +34,19 @@ def show_mermaid(text):
     return res
 
 
-system_propmot = '你是chatgpt,你需要使用mermaid.js库帮助我进行一些工作'
-user_propmot = '请根据下面的描述按照你的理解扩充内容,生成mermaid的代码,输出前请务必使用mermaid的语法修改错误\n----描述开始:\n'
-user_propmot_2 = '\n----描述结束\n请不要写任何解释, 其他文字或者Note,只需回复Mermiad图的文本即可,请把所有的中文符号都转成英文符号, 你需要使用的格式是:\n'
+system_prompt = 'You are an AI assistant that helps help me with some work, you need to use the mermaid.js library'
+user_prompt = 'Write a mermaid code for diagrams with the following instructions,\n'
+user_prompt_suffix = '\nDo not write any explanations, other text, or notes, just reply to the text of the Mermead diagram. Use English punctuation. You need to return :\n'
 
 
 def show_outputs(text, mermaid_format, use_input_text=False):
     if not use_input_text:
-        prompt = user_propmot + text + user_propmot_2 + mermaid_format + \
-            "\n有一个关于该格式的例子如下:\n" + prompt_map[mermaid_format]
+        prompt = user_prompt + text + user_prompt_suffix + mermaid_format + \
+            "\nan example is following:\n" + mermaid_samples[mermaid_format].strip("\n")
         logging.info("prompt:\n" + prompt)
         response = openai.ChatCompletion.create(
             engine="bgioaigpt",
-            messages=[{"role": "system", "content": system_propmot},
+            messages=[{"role": "system", "content": system_prompt},
                       {"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=800,
@@ -62,12 +61,12 @@ def show_outputs(text, mermaid_format, use_input_text=False):
         mermaid_content = resp_content
         # handle
         mermaid_content = remove_mermaid_markers(mermaid_content)
-        mermaid_content = replace_chinese_punctuation(mermaid_content)
-        markdown_text = resp_content
+        mermaid_content = replace_chinese_punctuation_with_english(mermaid_content)
+        markdown_text = replace_chinese_punctuation_with_english(resp_content)
     else:
         # handle
         mermaid_content = text
-        markdown_text = "```mermaid\n" + text + "\n```"
+        markdown_text = "```mermaid\n" + text.strip("\n") + "\n```"
 
     # after handle
     logging.info("print:\n" + mermaid_content)
@@ -75,6 +74,10 @@ def show_outputs(text, mermaid_format, use_input_text=False):
     markdown_text = markdown_text
     return mermaid_html, markdown_text
 
+def sample_btn_click(format):
+    #text show to
+    html, markdown = show_outputs(mermaid_samples[format], mermaid_format=format, use_input_text=True)
+    return mermaid_samples[format].strip("\n"), html, markdown
 
 def direct_show_btn_click(text):
     return show_outputs(text, mermaid_format="NONE", use_input_text=True)
@@ -89,19 +92,21 @@ with gr.Blocks() as iface:
         gr.Markdown("你可以输入描述让chatgpt为你作图, 也可以直接贴上Mermaid的代码作图")
         with gr.Row():
             with gr.Column():
-                txt = gr.Textbox(value="graph LR\n\tA --- B\n\tB-->C[fa:fa-ban forbidden]\n\tB-->D(fa:fa-spinner);", label="talk or show your code")
+                txt = gr.Code(value="把大象放进冰箱要几步", label="mermaid")
                 # txt = gr.Textbox(value="停车场收费系统的数据结构", label="talk or show your code")
                 with gr.Row():
+                    sample_btn = gr.Button(value="样例流程图")
                     generate_btn = gr.Button(value="问问GPT吧")
                     direct_show_btn = gr.Button(
                         value="显示流程图", label="直接贴Mermaid代码使用")
-                format = gr.Radio(["Flowcharts", "Sequence diagrams", "Class diagrams", "State diagrams",
-                                  "Entity Relationship Diagrams"], value="Flowchart", label="Mermaid format")
+                format = gr.Radio(list(mermaid_samples.keys()), value="Flowchart", label="Mermaid format")
             with gr.Column():
-                html = gr.HTML()
-                markdown = gr.Markdown()
+                html = gr.HTML(value = "mermaid fig")
+                markdown = gr.Markdown(value = "mermaid code")
         with gr.Accordion("See Details"):
             gr.Markdown(get_geoip(), elem_id="status_display", open="True")
+
+        sample_btn.click(sample_btn_click, inputs=[format], outputs=[txt, html, markdown])
         generate_btn.click(generate_btn_click, inputs=[
                            txt, format], outputs=[html, markdown])
         direct_show_btn.click(direct_show_btn_click, inputs=[

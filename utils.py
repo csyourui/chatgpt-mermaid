@@ -6,39 +6,33 @@ Copyright (c) 2023 by yourui. All rights reserved.
 # utils.py
 import re
 import requests
-import logging 
+import logging
 import json
+
 
 def remove_mermaid_markers(text):
     pattern = r'(^|\n)```(.*?)\n|\n```($|\n)'
     return re.sub(pattern, '', text, flags=re.MULTILINE)
 
-# replace_chinese_punctuation 替换中文符号为英文符号
-def replace_chinese_punctuation(text):
+def replace_chinese_punctuation_with_english(text: str) -> str:
+    """
+    Replaces Chinese punctuation in the given text with corresponding English punctuation.
+
+    Args:
+        text (str): The input text containing Chinese punctuation.
+
+    Returns:
+        str: The text with Chinese punctuation replaced with English punctuation.
+    """
     punctuation_mapping = {
-        "，": ",",
-        "；": ";",
-        "。": ".",
-        "？": "?",
-        "！": "!",
-        "：": ":",
-        "“": "\"",
-        "”": "\"",
-        "‘": "'",
-        "’": "'",
-        "（": "(",
-        "）": ")",
-        "【": "[",
-        "】": "]",
-        "［": "[",
-        "］": "]",
-        "｛": "{",
-        "｝": "}",
-        "—": "-",
+        "，": ",", "；": ";", "。": ".", "？": "?", "！": "!", "：": ":",
+        "“": "\"", "”": "\"", "‘": "'", "’": "'", "（": "(", "）": ")",
+        "【": "[", "】": "]", "［": "[", "］": "]", "｛": "{", "｝": "}",
+        "–": "-"
     }
 
-    translation_table = str.maketrans(punctuation_mapping)
-    return text.translate(translation_table)
+    return text.translate(str.maketrans(punctuation_mapping))
+
 
 
 # 读取JSON文件
@@ -57,8 +51,6 @@ def read_html_file(file_path):
     return html_content
 
 
-
-
 def get_geoip():
     response = requests.get('https://ipapi.co/json/', timeout=5)
     try:
@@ -66,14 +58,14 @@ def get_geoip():
     except:
         data = {
             "error": True,
-            "reason" : "连接ipapi失败"
+            "reason": "连接ipapi失败"
         }
     if "error" in data.keys():
         logging.warning(f"无法获取IP地址信息。\n{data}")
         if data['reason'] == "RateLimited":
-            return f"获取IP地理位置失败，因为达到了检测IP的速率限制。聊天功能可能仍然可用，但请注意，如果您的IP地址在不受支持的地区，您可能会遇到问题。"
+            return f"获取IP地理位置失败，因为达到了检测IP的速率限制。"
         else:
-            return f"获取IP地理位置失败。原因：{data['reason']}。你仍然可以使用聊天功能。"
+            return f"获取IP地理位置失败。原因：{data['reason']}。"
     else:
         ip = data['ip']
         text = f"**您的ip地址{ip}**"
